@@ -23,7 +23,9 @@
 			 
 			 dpMatrix[r][c] = isSame ? replaceCost : minCost + 1
 			 
-			 if(insertCost === minCost) {
+			 if(isSame) {
+			 	opMatrix[r][c] = 'replace'
+			 } else if(insertCost === minCost) {
 				 opMatrix[r][c] = 'insert'
 			 } else if(replaceCost === minCost) {
 				 opMatrix[r][c] = 'replace'
