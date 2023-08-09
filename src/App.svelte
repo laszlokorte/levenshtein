@@ -229,7 +229,7 @@
 		<dd><input id="word-a" type="text" maxlength="20" length="10" bind:value={wordA} /></dd>
 		<dt><label for="word-b">Word B</label></dt>
 		<dd><input id="word-b" type="text" maxlength="20" length="10" bind:value={wordB} /></dd>
-		<dt>Levenstein Distance</dt>
+		<dt>Levenshtein Distance</dt>
 		<dd>{distance}</dd>
 	</dl>
 </fieldset>
