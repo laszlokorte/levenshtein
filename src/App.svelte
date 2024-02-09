@@ -1,6 +1,16 @@
 <script>
 	let wordA = 'hello';
 	let wordB = 'world';
+
+	let focus = [0, 0]
+
+	function setFocus(r,c) {
+		focus = [r,c]
+	}
+
+	$: if(focus[0] >= lengthB || focus[1] >= lengthA) {
+		setFocus(0,0)
+	}
 	
 	$: charsA = ['', ...wordA.split('')]
 	$: charsB = ['', ...wordB.split('')]
@@ -25,10 +35,10 @@
 			 
 			 if(isSame) {
 			 	opMatrix[r][c] = 'replace'
-			 } else if(insertCost === minCost) {
-				 opMatrix[r][c] = 'insert'
 			 } else if(replaceCost === minCost) {
 				 opMatrix[r][c] = 'replace'
+			 } else if(insertCost === minCost) {
+				 opMatrix[r][c] = 'insert'
 			 } else {
 				 opMatrix[r][c] = 'delete'
 			 }
@@ -189,25 +199,54 @@
 	.noincr {
 		counter-increment: none;
 	}
-	.noincr::before {
-		content: "(...";
-	}
-	.noincr::after {
-		content: ")";
+	.noincr::marker {
+		content: "... ";
 	}
 
 	.incr {
 		counter-increment: op;
 	}
 
-	.incr::before {
+	.incr::marker {
 		content: counter(op) ". ";
 	}
 
 	.op-list {
-		list-style: none;
+		list-style: number;
+		list-style-position: outside;
 		counter-reset: op;
 		padding: 0;
+		margin-left: 2em;
+	}
+
+	.focused {
+		outline: 2px solid black;
+	}
+
+	.focused-different {
+		background: darkorange;
+		color: #fff;
+	}
+	.focused-same {
+		background: darkgreen;
+		color: #fff;
+	}
+
+	.focused-compare {
+		outline: 2px solid darkorange;
+		font-weight: bold;
+	}
+	.focused-copy {
+		outline: 2px solid darkgreen;
+	}
+
+	.sidebyside {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: space-between;
+		justify-items: start;
+		align-items: start;
+		gap: 1em;
 	}
 </style>
 <article>
@@ -239,27 +278,86 @@
 		Dynamic Programming Steps
 	</legend>
 	
-	<table>
-		<thead>
-			<tr>
-				<th></th>
-				{#each charsA as char}
-				<th>&laquo;{char}&raquo;</th>
-				{/each}
-			</tr>
-		</thead>
+	<div class="sidebyside">
+		<table style="flex-basis: 20em; flex-shrink: 1; flex-grow: 0;">
+			<thead>
+				<tr>
+					<th></th>
+					{#each charsA as char, c}
+					<th class:focused-different={charsA[focus[1]] != charsB[focus[0]] && focus[1] == c} class:focused-same={charsA[focus[1]] == charsB[focus[0]] && focus[1] == c}>&laquo;{char}&raquo;</th>
+					{/each}
+				</tr>
+			</thead>
 
-		<tbody>
-				{#each charsB as char, r}
-			<tr>
-				<th>&laquo;{char}&raquo;</th>
-				{#each dpMatrix[r] as result, c}
-				<td class={'op-'+opMatrix[r][c]}>{result}</td>
-				{/each}
-			</tr>
-				{/each}
-		</tbody>
-	</table>
+			<tbody>
+					{#each charsB as char, r}
+				<tr>
+					<th class:focused-same={charsA[focus[1]] == charsB[focus[0]] && focus[0] == r} class:focused-different={charsA[focus[1]] != charsB[focus[0]] && focus[0] == r}>&laquo;{char}&raquo;</th>
+					{#each dpMatrix[r] as result, c}
+					<td class:focused={focus[0] == r && focus[1] == c}  class:focused-compare={charsA[focus[1]] != charsB[focus[0]] && ((focus[0] == r+1 && focus[1] == c+1) || (focus[0] == r && focus[1] == c+1) || (focus[0] == r+1 && focus[1] == c))} class:focused-copy={charsA[focus[1]] == charsB[focus[0]] && (focus[0] == r+1 && focus[1] == c+1)} style:cursor="pointer" on:pointerdown={() => setFocus(r,c)} class={'op-'+opMatrix[r][c]}>{result}</td>
+					{/each}
+				</tr>
+					{/each}
+			</tbody>
+		</table>
+
+		<div style="flex-basis: 20em; flex-shrink: 1; flex-grow: 1;">
+			{#if focus[0] == 0 && focus[1] == 0}
+			<h2>Initialization</h2>
+			<p>
+				The upper leftmost cell is initialized to <strong>0</strong>.
+			</p>
+			<p>
+				This represents the zero changes that need to be made to change the empty sequence «» into the empty sequency «».
+			</p>
+			{:else if focus[0] > 0 && focus[1] > 0}
+			<h2>Step</h2>
+			
+			<p><strong>Compare the letter in this column and the letter in this row:</strong>
+				i.e. compare <strong>{charsA[focus[1]]}</strong> to <strong>{charsB[focus[0]]}</strong></p>
+
+				{#if charsA[focus[1]] == charsB[focus[0]]}
+				<p>
+					<strong style="color: darkgreen;">They are the same!</strong> Just copy the cost value from the top left neighbour.
+				</p>
+				{:else}
+				<p>
+					<strong style="color: darkorange;">They are NOT the same</strong> Compare the cost of:
+				</p>
+				<ul>
+					<li>the top left neighbour ({dpMatrix[focus[0]-1][focus[1]-1]})</li>
+					<li>the top neighbour ({dpMatrix[focus[0]-1][focus[1]]})</li>
+					<li>the left neighbour ({dpMatrix[focus[0]][focus[1]-1]})</li>
+				</ul>
+				<p>
+					Take the minimum (={Math.min(Math.min(dpMatrix[focus[0]-1][focus[1]-1],
+										dpMatrix[focus[0]-1][focus[1]]),
+					dpMatrix[focus[0]][focus[1]-1])}) of those three and increment by one  (={Math.min(Math.min(dpMatrix[focus[0]-1][focus[1]-1],
+										dpMatrix[focus[0]-1][focus[1]]),
+					dpMatrix[focus[0]][focus[1]-1]) + 1}).
+				</p>
+				{/if}
+
+			<p></p>
+			{:else if focus[0] > 0}
+			<h2>Initialization of first column</h2>
+
+			<p>The first column is initialized with increasing values.</p>
+			<p>
+				This represents the cost of inserting each letter to change the sequency <strong>«»</strong> into <strong>«{charsB.slice(0, focus[0]+1).join("")}»</strong>
+			</p>
+
+			{:else if focus[1] > 0}
+			<h2>Initialization of first row</h2>
+
+
+			<p>The first row is initialized with increasing values.</p>
+			<p>
+				This represents the cost of deleting each letter of sequency <strong>«{charsA.slice(0, focus[1]+1).join("")}»</strong> to turn it into <strong>«»</strong>. 
+			</p>
+			{/if}
+		</div>
+	</div>
 </fieldset>
 
 <fieldset>
@@ -287,7 +385,7 @@
 	
 <h3>Diff</h3>
 		
-<pre>
+<pre style="font-size: 1.6em;">
 {#each mergedOps as op}
 {#if op.op == 'keep'}
 {op.char}
