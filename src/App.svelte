@@ -34,7 +34,7 @@
 			 dpMatrix[r][c] = isSame ? replaceCost : minCost + 1
 			 
 			 if(isSame) {
-			 	opMatrix[r][c] = 'replace'
+			 	opMatrix[r][c] = 'keep'
 			 } else if(replaceCost === minCost) {
 				 opMatrix[r][c] = 'replace'
 			 } else if(insertCost === minCost) {
@@ -52,8 +52,10 @@
 		const isSame = charsA[c]==charsB[r]
 		if(opMatrix[r][c]==='insert') {
 			return {r:r-1,c:c,ops:[...ops,{op:'insert',char:charsB[r]}]}
+		} else if(opMatrix[r][c]==='keep') {
+			return {r:r-1,c:c-1,ops:[...ops,{op:'keep', char:charsA[c]}]}
 		} else if(opMatrix[r][c]==='replace') {
-			return {r:r-1,c:c-1,ops:isSame?[...ops,{op:'keep', char:charsA[c]}]:[...ops,{op:'replace',old:charsA[c],new:charsB[r]}]}
+			return {r:r-1,c:c-1,ops:[...ops,{op:'replace',old:charsA[c],new:charsB[r]}]}
 		} else if(opMatrix[r][c]==='delete') {
 			return {r:r,c:c-1,ops:[...ops,{op:'delete',char:charsA[c]}]}
 		} else {
@@ -115,13 +117,19 @@
 	
 	.op-delete {
 		position: relative;
-		color: red;
+		color: #aa3333;
 		background: #fee;
 	}
 	
 	.op-replace {
 		position: relative;
-		color: blue;
+		color: purple;
+		background: #fef;
+	}
+
+	.op-keep {
+		position: relative;
+		color: royalblue;
 		background: #eef;
 	}
 	
@@ -159,6 +167,20 @@
 	}
 	
 	.op-replace::before {
+		content: '';
+		border-width: 4px;
+		border-style: solid;
+		display: block;
+		width:0;
+		height:0;
+		border-color: currentColor transparent transparent currentColor;
+		margin: auto;
+		position: absolute;
+		left: 2px;
+		top: 2px;
+	}
+
+	.op-keep::before {
 		content: '';
 		border-width: 4px;
 		border-style: solid;
@@ -308,7 +330,7 @@
 				The upper leftmost cell is initialized to <strong>0</strong>.
 			</p>
 			<p>
-				This represents the zero changes that need to be made to change the empty sequence «» into the empty sequency «».
+				This represents the zero changes that need to be made to change the empty sequence «» into the empty sequence «».
 			</p>
 			{:else if focus[0] > 0 && focus[1] > 0}
 			<h2>Step</h2>
@@ -336,6 +358,15 @@
 										dpMatrix[focus[0]-1][focus[1]]),
 					dpMatrix[focus[0]][focus[1]-1]) + 1}).
 				</p>
+				<p>
+					Keep a note that the the <strong>{({
+											"replace": "top left",
+											"insert": "top",
+											"delete": "left",
+										})[
+						opMatrix[focus[0]][focus[1]]]
+					}</strong> neighbour was the minimum.
+				</p>
 				{/if}
 
 			<p></p>
@@ -344,7 +375,7 @@
 
 			<p>The first column is initialized with increasing values.</p>
 			<p>
-				This represents the cost of inserting each letter to change the sequency <strong>«»</strong> into <strong>«{charsB.slice(0, focus[0]+1).join("")}»</strong>
+				This represents the cost of inserting each letter to change the sequence <strong>«»</strong> into <strong>«{charsB.slice(0, focus[0]+1).join("")}»</strong>
 			</p>
 
 			{:else if focus[1] > 0}
@@ -353,7 +384,7 @@
 
 			<p>The first row is initialized with increasing values.</p>
 			<p>
-				This represents the cost of deleting each letter of sequency <strong>«{charsA.slice(0, focus[1]+1).join("")}»</strong> to turn it into <strong>«»</strong>. 
+				This represents the cost of deleting each letter of sequence <strong>«{charsA.slice(0, focus[1]+1).join("")}»</strong> to turn it into <strong>«»</strong>.
 			</p>
 			{/if}
 		</div>
