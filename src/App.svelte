@@ -340,15 +340,15 @@
 
 				{#if charsA[focus[1]] == charsB[focus[0]]}
 				<p>
-					<strong style="color: darkgreen;">They are the same!</strong> Just copy the cost value from the top left neighbour.
+					<strong style="color: darkgreen;">They are the same!</strong> Just copy the cost value from the upper left neighbour.
 				</p>
 				{:else}
 				<p>
 					<strong style="color: darkorange;">They are NOT the same</strong> Compare the cost of:
 				</p>
 				<ul>
-					<li>the top left neighbour ({dpMatrix[focus[0]-1][focus[1]-1]})</li>
-					<li>the top neighbour ({dpMatrix[focus[0]-1][focus[1]]})</li>
+					<li>the upper left neighbour ({dpMatrix[focus[0]-1][focus[1]-1]})</li>
+					<li>the upper neighbour ({dpMatrix[focus[0]-1][focus[1]]})</li>
 					<li>the left neighbour ({dpMatrix[focus[0]][focus[1]-1]})</li>
 				</ul>
 				<p>
